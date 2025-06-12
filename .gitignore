@@ -1,0 +1,53 @@
+# Unity 관련 제외 파일
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+
+# Unity Collaborate
+.collabignore
+
+# Unity 의존성 저장소
+Packages/packages-lock.json
+
+# Visual Studio/JetBrains IDE 설정 파일
+.vscode/
+.vs/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# OS별 무시 파일
+.DS_Store
+Thumbs.db
+
+# Crash Reports
+sysinfo.txt
+
+# Rider 관련
+.idea/
+*.sln.iml
+
+# 빌드 결과물 (Android, iOS 등)
+*.apk
+*.aab
+*.xcworkspace
+*.xcodeproj
+*.pbxproj
+*.xcuserstate
+
+# 기타
+*.log
+*.stacktrace
+*.orig

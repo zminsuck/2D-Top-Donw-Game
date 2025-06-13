@@ -5,7 +5,10 @@ public class EnemySpawner : MonoBehaviour
     public GameObject enemyPrefab;
     public float spawnInterval = 3f;
     public int maxEnemies = 10;
-    public Transform[] spawnPoints; // 고정된 위치 배열 사용
+    public Transform[] spawnPoints;
+    public PlayerHealth playerHealth;
+    public AudioClip spawnSound;
+    public AudioSource audioSource;
 
     private int currentEnemyCount = 0;
 
@@ -28,17 +31,37 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
+        // 플레이어가 죽었거나 적이 최대치에 도달한 경우 스폰하지 않음
+        if (playerHealth != null && playerHealth.IsDead) return;
+
         if (currentEnemyCount >= maxEnemies)
             return;
 
-        // ? 지정된 위치 중 하나를 무작위 선택
         Transform spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length)];
-
         GameObject enemy = Instantiate(enemyPrefab, spawnPoint.position, Quaternion.identity);
 
+        // 플레이어를 자동 연결
         Enemy enemyScript = enemy.GetComponent<Enemy>();
         if (enemyScript != null)
+        {
+            GameObject playerObject = GameObject.FindWithTag("Player");
+            if (playerObject != null)
+            {
+                enemyScript.player = playerObject.transform;
+            }
+            else
+            {
+                Debug.LogWarning("Player 태그가 붙은 오브젝트를 찾을 수 없습니다.");
+            }
+
             enemyScript.OnDeath += HandleEnemyDeath;
+        }
+
+        // 스폰 사운드 재생
+        if (spawnSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(spawnSound);
+        }
 
         currentEnemyCount++;
     }

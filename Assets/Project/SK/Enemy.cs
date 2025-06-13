@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class Enemy : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class Enemy : MonoBehaviour
     public System.Action OnDeath;
     public LayerMask obstacleLayer;
 
+    public AudioClip attackSound;
+    private AudioSource audioSource;
+
     private int currentHealth;
     private float lastAttackTime;
     private Animator animator;
@@ -20,19 +24,22 @@ public class Enemy : MonoBehaviour
     {
         currentHealth = maxHealth;
         animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
         playerHealth = player.GetComponent<PlayerHealth>();
     }
 
     void Update()
     {
-        if (player == null || currentHealth <= 0) return;
+        if (player == null || currentHealth <= 0 || (playerHealth != null && playerHealth.IsDead))
+        {
+            animator.SetBool("Walk", false);
+            return;
+        }
 
         Vector2 direction = (player.position - transform.position).normalized;
         float distance = Vector2.Distance(transform.position, player.position);
 
-        // Raycast로 장애물 감지
         RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, 1f, obstacleLayer);
-
         bool isBlocked = hit.collider != null;
 
         if (!isBlocked && distance > attackRange)
@@ -43,7 +50,6 @@ public class Enemy : MonoBehaviour
         else
         {
             animator.SetBool("Walk", false);
-
             if (distance <= attackRange && Time.time > lastAttackTime + attackCooldown)
             {
                 animator.SetTrigger("Attack");
@@ -52,12 +58,16 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // 애니메이션 이벤트에서 호출
     public void DealDamageToPlayer()
     {
-        if (playerHealth != null && Vector2.Distance(transform.position, player.position) <= attackRange)
+        if (playerHealth != null && !playerHealth.IsDead &&
+            Vector2.Distance(transform.position, player.position) <= attackRange)
         {
             playerHealth.TakeDamage(damage);
+            if (attackSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(attackSound);
+            }
         }
     }
 
@@ -78,6 +88,8 @@ public class Enemy : MonoBehaviour
     {
         animator.SetTrigger("Dead");
         OnDeath?.Invoke();
+
+        GameManager.Instance.AddScore(100);
         Destroy(gameObject, 2f);
     }
 }

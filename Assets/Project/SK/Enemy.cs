@@ -2,96 +2,82 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public float moveSpeed = 2f;
-    public float detectionRange = 5f;
-    public float attackRange = 1.2f;
-    public LayerMask playerLayer;
-    public Transform attackPoint;
+    public Transform player;
+    public float moveSpeed = 3f;
+    public float attackRange = 1f;
+    public float attackCooldown = 1.5f;
+    public int damage = 10;
+    public int maxHealth = 100;
+    public System.Action OnDeath;
+    public LayerMask obstacleLayer;
 
-    private Animator anim;
-    private Rigidbody2D rb;
-    private Transform player;
-    private bool isDead = false;
+    private int currentHealth;
+    private float lastAttackTime;
+    private Animator animator;
+    private PlayerHealth playerHealth;
 
     void Start()
     {
-        anim = GetComponent<Animator>();
-        rb = GetComponent<Rigidbody2D>();
-        player = GameObject.FindGameObjectWithTag("Player")?.transform;
+        currentHealth = maxHealth;
+        animator = GetComponent<Animator>();
+        playerHealth = player.GetComponent<PlayerHealth>();
     }
 
     void Update()
     {
-        if (isDead || player == null) return;
+        if (player == null || currentHealth <= 0) return;
 
+        Vector2 direction = (player.position - transform.position).normalized;
         float distance = Vector2.Distance(transform.position, player.position);
 
-        if (distance <= attackRange)
-        {
-            rb.linearVelocity = Vector2.zero;
-            anim.SetBool("Walk", false);
-            anim.SetTrigger("Attack");
-        }
-        else if (distance <= detectionRange)
-        {
-            Vector2 direction = (player.position - transform.position).normalized;
-            rb.linearVelocity = new Vector2(direction.x * moveSpeed, rb.linearVelocity.y);
+        // Raycast로 장애물 감지
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, direction, 1f, obstacleLayer);
 
-            anim.SetBool("Walk", true);
-            Flip(direction.x);
+        bool isBlocked = hit.collider != null;
+
+        if (!isBlocked && distance > attackRange)
+        {
+            animator.SetBool("Walk", true);
+            transform.position += (Vector3)direction * moveSpeed * Time.deltaTime;
         }
         else
         {
-            rb.linearVelocity = Vector2.zero;
-            anim.SetBool("Walk", false);
+            animator.SetBool("Walk", false);
+
+            if (distance <= attackRange && Time.time > lastAttackTime + attackCooldown)
+            {
+                animator.SetTrigger("Attack");
+                lastAttackTime = Time.time;
+            }
         }
     }
 
-    void Flip(float dirX)
+    // 애니메이션 이벤트에서 호출
+    public void DealDamageToPlayer()
     {
-        if (dirX == 0) return;
-        Vector3 scale = transform.localScale;
-        scale.x = Mathf.Abs(scale.x) * (dirX > 0 ? 1 : -1);
-        transform.localScale = scale;
-    }
-
-    public void TakeDamage()
-    {
-        if (isDead) return;
-
-        anim.SetTrigger("Hurt");
-        isDead = true;
-
-        anim.SetTrigger("Dead");
-        rb.linearVelocity = Vector2.zero;
-        rb.bodyType = RigidbodyType2D.Static;
-        GetComponent<Collider2D>().enabled = false;
-    }
-
-    public void Attack()
-    {
-        if (isDead) return;
-        anim.SetTrigger("Attack");
-    }
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (isDead) return;
-
-        if (other.CompareTag("Player"))
+        if (playerHealth != null && Vector2.Distance(transform.position, player.position) <= attackRange)
         {
-            Attack();
+            playerHealth.TakeDamage(damage);
         }
     }
 
-    void PerformAttack()
+    public void TakeDamage(int amount)
     {
-        Collider2D[] hitPlayers = Physics2D.OverlapCircleAll(attackPoint.position, attackRange, playerLayer);
+        if (currentHealth <= 0) return;
 
-        foreach (Collider2D player in hitPlayers)
+        currentHealth -= amount;
+        animator.SetTrigger("Hurt");
+
+        if (currentHealth <= 0)
         {
-            Debug.Log("�÷��̾� ����!");
+            Die();
         }
     }
 
+    void Die()
+    {
+        animator.SetTrigger("Dead");
+        OnDeath?.Invoke();
+        Destroy(gameObject, 2f);
+    }
 }

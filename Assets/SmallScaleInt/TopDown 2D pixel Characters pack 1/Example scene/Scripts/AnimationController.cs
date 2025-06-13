@@ -393,21 +393,19 @@ namespace SmallScaleInc.TopDownPixelCharactersPack1
         //Die
         public void TriggerDie()
         {
-            if (!gameObject.activeInHierarchy)
-            {
-                return;
-            }
-            // Ensure that we're indicating a death state is happening
-            animator.SetBool("isDie", true);
-            // Check the current direction and trigger the appropriate die animation
-            if (currentDirection.Equals("isNorth")) TriggerDeathAnimation("DieNorth");
-            else if (currentDirection.Equals("isSouth")) TriggerDeathAnimation("DieSouth");
-            else if (currentDirection.Equals("isEast")) TriggerDeathAnimation("DieEast");
-            else if (currentDirection.Equals("isWest")) TriggerDeathAnimation("DieWest");
-            else if (currentDirection.Equals("isNorthEast")) TriggerDeathAnimation("DieNorthEast");
-            else if (currentDirection.Equals("isNorthWest")) TriggerDeathAnimation("DieNorthWest");
-            else if (currentDirection.Equals("isSouthEast")) TriggerDeathAnimation("DieSouthEast");
-            else if (currentDirection.Equals("isSouthWest")) TriggerDeathAnimation("DieSouthWest");
+            if (!gameObject.activeInHierarchy) return;
+
+            animator.SetBool("isDie", true);         // 상태 진입
+            animator.SetTrigger("dieTrigger");       // 상태 전환
+
+            if (currentDirection == "isNorth") animator.SetBool("dieNorth", true);
+            else if (currentDirection == "isSouth") animator.SetBool("dieSouth", true);
+            else if (currentDirection == "isEast") animator.SetBool("dieEast", true);
+            else if (currentDirection == "isWest") animator.SetBool("dieWest", true);
+            else if (currentDirection == "isNorthEast") animator.SetBool("dieNorthEast", true);
+            else if (currentDirection == "isNorthWest") animator.SetBool("dieNorthWest", true);
+            else if (currentDirection == "isSouthEast") animator.SetBool("dieSouthEast", true);
+            else if (currentDirection == "isSouthWest") animator.SetBool("dieSouthWest", true);
         }
 
         private void TriggerDeathAnimation(string deathDirectionParam)

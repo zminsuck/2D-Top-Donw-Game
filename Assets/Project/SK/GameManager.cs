@@ -57,6 +57,11 @@ public class GameManager : MonoBehaviour
             targetFillAmount = (float)score / maxScore;
     }
 
+    public int GetScore()
+    {
+        return score;
+    }
+
     public void GameOver()
     {
         Time.timeScale = 0f;

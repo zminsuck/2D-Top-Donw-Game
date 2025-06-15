@@ -56,6 +56,11 @@ public class GameManager : MonoBehaviour
         if (scoreBarFill != null)
             targetFillAmount = (float)score / maxScore;
     }
+    public void ResetScore()
+    {
+        score = 0;
+        UpdateScoreUI();
+    }
 
     public int GetScore()
     {

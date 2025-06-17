@@ -20,12 +20,25 @@ public class Enemy : MonoBehaviour
     private Animator animator;
     private PlayerHealth playerHealth;
 
+    [Header("HP Bar ฐüทร")]
+    public Transform hpAnchor;
+    public GameObject hpBarPrefab;
+    private EnemyHPBar hpBar;
+
     void Start()
     {
         currentHealth = maxHealth;
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
         playerHealth = player.GetComponent<PlayerHealth>();
+
+        if (hpBarPrefab != null && hpAnchor != null)
+        {
+            GameObject hpGO = Instantiate(hpBarPrefab, FindFirstObjectByType<Canvas>().transform);
+            hpBar = hpGO.GetComponent<EnemyHPBar>();
+            hpBar.Initialize(hpAnchor);
+            hpBar.SetHP(currentHealth, maxHealth);
+        }
     }
 
     void Update()
@@ -78,6 +91,9 @@ public class Enemy : MonoBehaviour
         currentHealth -= amount;
         animator.SetTrigger("Hurt");
 
+        if (hpBar != null)
+            hpBar.SetHP(currentHealth, maxHealth);
+
         if (currentHealth <= 0)
         {
             Die();
@@ -90,6 +106,9 @@ public class Enemy : MonoBehaviour
         OnDeath?.Invoke();
 
         GameManager.Instance.AddScore(100);
+        if (hpBar != null)
+            Destroy(hpBar.gameObject);
+
         Destroy(gameObject, 2f);
     }
 }

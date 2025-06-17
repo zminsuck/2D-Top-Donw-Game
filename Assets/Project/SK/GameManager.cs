@@ -20,6 +20,11 @@ public class GameManager : MonoBehaviour
     public float fillSmoothSpeed = 5f;
     private float targetFillAmount = 0f;
 
+    [Header("GameClear")]
+    private float playTime = 0f;
+    public TMP_Text playTimeText;
+    public GameObject gameClearPanel;
+
     void Awake()
     {
         Instance = this;
@@ -37,6 +42,13 @@ public class GameManager : MonoBehaviour
         if (scoreBarFill != null)
         {
             scoreBarFill.fillAmount = Mathf.Lerp(scoreBarFill.fillAmount, targetFillAmount, Time.deltaTime * fillSmoothSpeed);
+        }
+
+        // 플레이 시간 누적
+        if (Time.timeScale > 0f)
+        {
+            playTime += Time.deltaTime;
+            UpdatePlayTimeUI();
         }
     }
 
@@ -56,6 +68,11 @@ public class GameManager : MonoBehaviour
         if (scoreBarFill != null)
             targetFillAmount = (float)score / maxScore;
     }
+    void UpdatePlayTimeUI()
+    {
+        if (playTimeText != null)
+            playTimeText.text = $"PLAYERTIME {Mathf.FloorToInt(playTime)}";
+    }
     public void ResetScore()
     {
         score = 0;
@@ -70,7 +87,19 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         Time.timeScale = 0f;
+        UpdateFinalUI();
         gameOverPanel.SetActive(true);
+    }
+    public void GameClear()
+    {
+        Time.timeScale = 0f;
+        UpdateFinalUI(); // <- 추가
+        gameClearPanel.SetActive(true);
+    }
+    void UpdateFinalUI()
+    {
+        UpdateScoreUI();
+        UpdatePlayTimeUI();
     }
 
     public void RestartGame()
@@ -78,9 +107,12 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-
     public void ExitGame()
     {
-        Application.Quit();
+        #if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false; // 에디터 종료
+        #else
+            Application.Quit(); // 실제 빌드 종료
+        #endif
     }
 }
